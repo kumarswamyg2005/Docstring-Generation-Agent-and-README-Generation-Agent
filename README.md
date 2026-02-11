@@ -199,5 +199,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built for developers who value good documentation but want to save time writing it.
 
 ---
-
-**Made with ❤️ by the DocuMate team**
