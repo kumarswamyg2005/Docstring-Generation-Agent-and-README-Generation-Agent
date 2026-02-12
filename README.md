@@ -102,6 +102,76 @@ Open your browser and navigate to: **http://localhost:8000**
 └── README.md
 ```
 
+## System Architecture & Flow
+
+The following diagram illustrates how DocuMate processes requests through both Web API and CLI interfaces:
+
+```mermaid
+graph TD
+    A[User] -->|Upload Files| B{Entry Point}
+    B -->|Web API| C[FastAPI Server :8000]
+    B -->|CLI| D[cli.py]
+
+    C --> E{Choose Action}
+    E -->|Single File| F[POST /generate-docstrings/single]
+    E -->|Multiple Files| G[POST /generate-docstrings/multiple]
+    E -->|README| H[POST /generate-readme]
+    E -->|Check Status| I[GET /health]
+
+    F --> J[DocstringAgent]
+    G --> J
+    H --> K[READMEAgent]
+
+    D -->|--docstrings| J
+    D -->|--readme| K
+
+    J --> L[DocstringGenerator Core]
+    K --> M[READMEGenerator Core]
+
+    L --> N[utils.py - AST Parser]
+    M --> N
+
+    N --> O{Use AI?}
+    O -->|Yes| P[ai_provider.py]
+    O -->|No| Q[Rule-based Generation]
+
+    P --> R{Provider}
+    R -->|OpenAI| S[GPT Models]
+    R -->|Anthropic| T[Claude]
+    R -->|GitHub| U[GitHub Models]
+
+    S --> V[Enhanced Description]
+    T --> V
+    U --> V
+
+    V --> W[Generate Docstrings]
+    Q --> W
+
+    W --> X[Insert into Code Bottom-up]
+    X --> Y[Return Modified File/ZIP]
+
+    M --> Z[Analyze Project Structure]
+    Z --> AA[Extract Classes, Functions, Dependencies]
+    AA --> AB{Use AI?}
+    AB -->|Yes| P
+    AB -->|No| Q
+    Q --> AC[Generate README Sections]
+    V --> AC
+    AC --> AD[Return README.md]
+
+    Y --> AE[User receives documented code]
+    AD --> AE
+```
+
+### How the Flow Works:
+
+1. **Entry Points**: Users can access via Web API (http://localhost:8000) or CLI (`cli.py`)
+2. **Request Processing**: API routes or CLI arguments determine the action
+3. **Core Engine**: DocstringGenerator or READMEGenerator processes files
+4. **AST Parsing**: Python code analyzed using Abstract Syntax Tree
+5. **AI Enhancement**: Optional AI-powered description improvements via OpenAI/Anthropic/GitHub Models
+6. **Output Generation**: Modified files or README returned to user
+
 ## Author
 
 Kumar Swamy G - [GitHub](https://github.com/kumarswamyg2005)

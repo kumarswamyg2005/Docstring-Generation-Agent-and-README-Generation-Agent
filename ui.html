@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocuMate - AI Python Documentation Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #8b5cf6;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --card-bg: rgba(30, 41, 59, 0.6);
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-dark);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.3) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.3) 0px, transparent 50%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--text-primary);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        linear-gradient(transparent 0%, var(--bg-dark) 100%),
+        repeating-linear-gradient(90deg,
+          transparent,
+          transparent 100px,
+          rgba(99, 102, 241, 0.03) 100px,
+          rgba(99, 102, 241, 0.03) 101px),
+        repeating-linear-gradient(0deg,
+          transparent,
+          transparent 100px,
+          rgba(139, 92, 246, 0.03) 100px,
+          rgba(139, 92, 246, 0.03) 101px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .header h1 {
+      font-size: 3.5em;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 15px;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      font-size: 1.3em;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 0.9em;
+      margin-top: 15px;
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--glass-border);
+      animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 40px;
+      background: var(--glass-bg);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 24px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: -1;
+    }
+
+    .tab:hover:not(.active) {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab.active {
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .tab.active::before {
+      opacity: 1;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.95em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label::before {
+      content: '•';
+      color: var(--primary-light);
+      font-size: 1.5em;
+      line-height: 0;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 32px 24px;
+      border: 2px dashed var(--primary);
+      border-radius: 16px;
+      cursor: pointer;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      color: var(--text-secondary);
+      font-size: 15px;
+      position: relative;
+    }
+
+    input[type="file"]::file-selector-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 15px;
+      transition: all 0.3s;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    input[type="file"]:hover {
+      border-color: var(--primary-light);
+      background: rgba(99, 102, 241, 0.05);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+    }
+
+    input[type="file"]:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      font-size: 15px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+    }
+
+    select option {
+      background: var(--bg-light);
+      color: var(--text-primary);
+      padding: 12px;
+    }
+
+    select:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--glass-bg);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s;
+    }
+
+    .checkbox-group:hover {
+      background: rgba(99, 102, 241, 0.05);
+      border-color: var(--primary);
+    }
+
+    input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      transition: all 0.3s;
+    }
+
+    input[type="checkbox"]:checked {
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+    }
+
+    .checkbox-group label {
+      margin: 0 !important;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-group label::before {
+      content: '🤖';
+      margin-right: 8px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 18px 40px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      margin-top: 15px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+      letter-spacing: 0.5px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 36px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .result {
+      margin-top: 32px;
+      padding: 24px 28px;
+      background: var(--glass-bg);
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      display: none;
+      backdrop-filter: blur(20px);
+    }
+
+    .result.show {
+      display: block;
+      animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result.success {
+      border-left: 4px solid var(--success);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+    }
+
+    .result.error {
+      border-left: 4px solid var(--error);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+    }
+
+    .result h3 {
+      font-size: 1.3em;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .result.success h3 {
+      color: var(--success);
+    }
+
+    .result.error h3 {
+      color: var(--error);
+    }
+
+    .result p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .loading.show {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .spinner::before,
+    .spinner::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .spinner::before {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+
+    .spinner::after {
+      width: 35px;
+      height: 35px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-top-color: var(--secondary);
+      animation: spin 0.7s linear infinite reverse;
+    }
+
+    .loading p {
+      color: var(--text-secondary);
+      font-size: 1.05em;
+      font-weight: 500;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+      padding: 20px 24px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      border-left: 4px solid var(--primary);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info-box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+
+    .info-box h3 {
+      color: var(--primary-light);
+      margin-bottom: 10px;
+      font-size: 1.15em;
+      font-weight: 700;
+      position: relative;
+    }
+
+    .info-box p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.95em;
+      position: relative;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .footer p {
+      margin-bottom: 12px;
+      font-size: 0.95em;
+    }
+
+    .footer a {
+      color: var(--primary-light);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    .footer a:hover {
+      color: white;
+      background: var(--glass-bg);
+      transform: translateY(-2px);
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      margin-top: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 600;
+      font-size: 15px;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+    }
+
+    .download-btn:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+      }
+
+      .header p {
+        font-size: 1.1em;
+      }
+
+      .logo {
+        width: 60px;
+        height: 60px;
+        font-size: 2em;
+      }
+
+      .card {
+        padding: 25px;
+      }
+
+      .tabs {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .tab {
+        width: 100%;
+      }
+
+      .btn {
+        padding: 16px 32px;
+        font-size: 15px;
+      }
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      animation: slideInRight 0.5s ease;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+
+      50% {
+        opacity: 0.8;
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+      }
+    }
+
+    .status-text {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">📚</div>
+      <h1>DocuMate</h1>
+      <p>AI-Powered Python Documentation Generator</p>
+      <span class="badge">✨ Powered by FastAPI & AI Models</span>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('single')">📄 Single File</button>
+        <button class="tab" onclick="switchTab('multiple')">📦 Multiple Files</button>
+        <button class="tab" onclick="switchTab('readme')">📝 Generate README</button>
+      </div>
+
+      <!-- Single File Tab -->
+      <div id="single-tab" class="tab-content active">
+        <div class="info-box">
+          <h3>🔧 Single File Docstring Generation</h3>
+          <p>Upload a Python file to automatically generate comprehensive docstrings for all functions, classes, and
+            methods following industry standards.</p>
+        </div>
+
+        <form id="single-form">
+          <div class="form-group">
+            <label for="single-file">Python File (.py)</label>
+            <input type="file" id="single-file" accept=".py" required>
+          </div>
+
+          <div class="form-group">
+            <label for="single-style">Docstring Style</label>
+            <select id="single-style">
+              <option value="google">🔵 Google Style (Recommended)</option>
+              <option value="numpy">🟢 NumPy Style</option>
+              <option value="sphinx">🟣 Sphinx Style</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="single-ai">
+              <label for="single-ai">AI Enhancement</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn">🚀 Generate Docstrings</button>
+        </form>
+
+        <div class="loading" id="single-loading">
+          <div class="spinner"></div>
+          <p>Processing your file...</p>
+        </div>
+
+        <div class="result" id="single-result"></div>
+      </div>
+
+      <!-- Multiple Files Tab -->
+      <div id="multiple-tab" class="tab-content">
+        <div class="info-box">
+          <h3>📦 Batch Docstring Generation</h3>
+          <p>Upload multiple Python files and receive a ZIP archive with all files professionally documented. Perfect
+            for documenting entire modules or packages.</p>
+        </div>
+
+        <form id="multiple-form">
+          <div class="form-group">
+            <label for="multiple-files">Python Files (.py)</label>
+            <input type="file" id="multiple-files" accept=".py" multiple required>
+          </div>
+
+          <div class="form-group">
+            <label for="multiple-style">Docstring Style</label>
+            <select id="multiple-style">
+              <option value="google">🔵 Google Style (Recommended)</option>
+              <option value="numpy">🟢 NumPy Style</option>
+              <option value="sphinx">🟣 Sphinx Style</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="multiple-ai">
+              <label for="multiple-ai">AI Enhancement</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn">🚀 Process All Files</button>
+        </form>
+
+        <div class="loading" id="multiple-loading">
+          <div class="spinner"></div>
+          <p>Processing your files...</p>
+        </div>
+
+        <div class="result" id="multiple-result"></div>
+      </div>
+
+      <!-- README Tab -->
+      <div id="readme-tab" class="tab-content">
+        <div class="info-box">
+          <h3>📝 Intelligent README Generation</h3>
+          <p>Upload a ZIP file containing your Python project to generate a comprehensive, well-structured README.md
+            with project analysis, features, and usage instructions.</p>
+        </div>
+
+        <form id="readme-form">
+          <div class="form-group">
+            <label for="readme-file">Project ZIP File</label>
+            <input type="file" id="readme-file" accept=".zip" required>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="readme-ai">
+              <label for="readme-ai">AI Enhancement</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn">🚀 Generate README</button>
+        </form>
+
+        <div class="loading" id="readme-loading">
+          <div class="spinner"></div>
+          <p>Analyzing your project...</p>
+        </div>
+
+        <div class="result" id="readme-result"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Built with ❤️ using FastAPI, Python AST & AI Models</p>
+      <p>
+        <a href="http://localhost:8000/docs" target="_blank">📚 API Documentation</a>
+        <span style="margin: 0 8px; opacity: 0.3;">•</span>
+        <a href="https://github.com" target="_blank">💻 GitHub</a>
+      </p>
+      <p style="font-size: 0.85em; margin-top: 15px; opacity: 0.6;">
+        DocuMate © 2026 • Version 1.0.0
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Single File Form
+    document.getElementById('single-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('single-file');
+      const style = document.getElementById('single-style').value;
+      const useAi = document.getElementById('single-ai').checked;
+      const loading = document.getElementById('single-loading');
+      const result = document.getElementById('single-result');
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('style', style);
+      formData.append('use_ai', useAi);
+
+      loading.classList.add('show');
+      result.classList.remove('show');
+
+      try {
+        const response = await fetch(`${API_BASE}/generate-docstrings/single`, {
+          method: 'POST',
+          body: formData
+        });
+
+        loading.classList.remove('show');
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const filename = `documented_${fileInput.files[0].name}`;
+
+          result.className = 'result success show';
+          result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>Your file has been documented successfully.</p>
+                        <a href="${url}" download="${filename}" class="download-btn">📥 Download File</a>
+                    `;
+        } else {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to generate docstrings');
+        }
+      } catch (error) {
+        loading.classList.remove('show');
+        result.className = 'result error show';
+        result.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+      }
+    });
+
+    // Multiple Files Form
+    document.getElementById('multiple-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('multiple-files');
+      const style = document.getElementById('multiple-style').value;
+      const useAi = document.getElementById('multiple-ai').checked;
+      const loading = document.getElementById('multiple-loading');
+      const result = document.getElementById('multiple-result');
+
+      const formData = new FormData();
+      Array.from(fileInput.files).forEach(file => {
+        formData.append('files', file);
+      });
+      formData.append('style', style);
+      formData.append('use_ai', useAi);
+
+      loading.classList.add('show');
+      result.classList.remove('show');
+
+      try {
+        const response = await fetch(`${API_BASE}/generate-docstrings/multiple`, {
+          method: 'POST',
+          body: formData
+        });
+
+        loading.classList.remove('show');
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+
+          result.className = 'result success show';
+          result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>All ${fileInput.files.length} files have been documented.</p>
+                        <a href="${url}" download="documented_files.zip" class="download-btn">📥 Download ZIP</a>
+                    `;
+        } else {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to generate docstrings');
+        }
+      } catch (error) {
+        loading.classList.remove('show');
+        result.className = 'result error show';
+        result.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+      }
+    });
+
+    // README Form
+    document.getElementById('readme-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('readme-file');
+      const useAi = document.getElementById('readme-ai').checked;
+      const loading = document.getElementById('readme-loading');
+      const result = document.getElementById('readme-result');
+
+      const formData = new FormData();
+      formData.append('project_zip', fileInput.files[0]);
+      formData.append('use_ai', useAi);
+
+      loading.classList.add('show');
+      result.classList.remove('show');
+
+      try {
+        const response = await fetch(`${API_BASE}/generate-readme`, {
+          method: 'POST',
+          body: formData
+        });
+
+        loading.classList.remove('show');
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+
+          result.className = 'result success show';
+          result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>README.md has been generated for your project.</p>
+                        <a href="${url}" download="README.md" class="download-btn">📥 Download README</a>
+                    `;
+        } else {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to generate README');
+        }
+      } catch (error) {
+        loading.classList.remove('show');
+        result.className = 'result error show';
+        result.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+      }
+    });
+
+    // Check API health on load
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch(`${API_BASE}/health`);
+        if (!response.ok) {
+          console.warn('API health check failed');
+        }
+      } catch (error) {
+        console.error('Failed to connect to API:', error);
+        alert('⚠️ Warning: Could not connect to the API server. Please make sure the server is running on port 8000.');
+      }
+    });
+  </script>
+</body>
+
+</html>
