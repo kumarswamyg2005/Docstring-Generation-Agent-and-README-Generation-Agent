@@ -51,10 +51,23 @@ ANTHROPIC_API_KEY=your_key_here
 
 ## Usage
 
-### Start the server
+### Option 1: Run with Python
+
+```bash
+python src/main.py
+```
+
+Or with uvicorn directly:
 
 ```bash
 uvicorn app.__main__:app --reload
+```
+
+### Option 2: Run with Docker
+
+```bash
+cd src
+docker-compose -f docker.compose.yaml up --build
 ```
 
 The API will be available at: **http://localhost:8000**
@@ -74,13 +87,17 @@ Open your browser and navigate to: **http://localhost:8000**
 ## Project Structure
 
 ```
+├── src/
+│   ├── main.py              # Application entry point
+│   ├── dockerfile           # Docker configuration
+│   └── docker.compose.yaml  # Docker Compose configuration
 ├── app/
-│   ├── __main__.py     # FastAPI application
-│   ├── agents.py       # Documentation agents
-│   ├── config.py       # Configuration
-│   └── models.py       # Pydantic models
-├── docstring_generator.py
-├── readme_generator.py
+│   ├── __main__.py          # FastAPI application
+│   ├── agents.py            # Documentation agents
+│   ├── config.py            # Configuration
+│   └── models.py            # Pydantic models
+├── docstring_generator.py   # Core docstring logic
+├── readme_generator.py      # Core README logic
 ├── requirements.txt
 └── README.md
 ```

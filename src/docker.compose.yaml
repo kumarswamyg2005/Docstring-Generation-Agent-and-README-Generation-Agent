@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  doc-generator:
+    build:
+      context: ..
+      dockerfile: src/dockerfile
+    container_name: documentation-generator
+    ports:
+      - "8000:8000"
+    volumes:
+      - ..:/app
+    environment:
+      - USE_AI_DEFAULT=false
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+    restart: unless-stopped
+    command: python src/main.py
